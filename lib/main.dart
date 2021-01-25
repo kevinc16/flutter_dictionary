@@ -3,9 +3,10 @@ import 'package:english_words/english_words.dart';
 import 'api.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
+import 'db.dart';
+
 // to do:
 /*
-- formatting of definitions (at least a little better)
 - most recent words thru sqlite
 - sidebar stuff
 */
@@ -27,13 +28,11 @@ class MyApp extends StatelessWidget {
 }
 
 class MainPage extends StatelessWidget {
-  final _suggestions = <WordPair>[];
-  Widget _buildRow(WordPair pair) {
-    return ListTile(
-      title: Text(
-        pair.asPascalCase,
-      ),
-    );
+
+  Future<List<String>> _buildLastWords() async { // for the main page
+    await WordDBProvider.db.newLastWord("hello");
+    await WordDBProvider.db.newLastWord("what");
+    return await WordDBProvider.db.getLastWords();
   }
 
   @override
@@ -71,18 +70,54 @@ class MainPage extends StatelessWidget {
                         margin: const EdgeInsets.symmetric(horizontal: 15.0),
                         child: SearchBar(),
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 20),
                       Expanded(
-                          child: Container(
-                              height: 50,
-                              child: ListView.builder(
-                                  padding: EdgeInsets.all(16.0),
-                                  itemBuilder: /*1*/ (context, i) {
-                                    // here we display the most recent searched words?
-                                    return null;
-                                  })))
+                          child: FutureBuilder<List<String>>(
+                            future: _buildLastWords(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                  print(snapshot.data);
+                                  return ListView.builder(
+                                    itemCount: snapshot.data.length,
+                                    itemBuilder: (context, index) {
+                                      return Column(
+                                        children: <Widget>[
+                                          ListTile(
+                                            title: FlatButton(
+                                              height: 50,
+                                              child: Row(
+                                                children: [Text(
+                                                  snapshot.data[index],
+                                                  style: TextStyle(
+                                                    fontSize: 16
+                                                  ),
+                                                  textAlign: TextAlign.right,
+                                                )]
+                                              ),
+                                              onPressed: () => _searchWord(snapshot.data[index])
+                                              ,
+                                            ),
+                                          ),
+                                          Divider(),
+                                        ],
+                                      );
+                                    },
+                                  );
+                              } else if (snapshot.hasError) {
+                                print(snapshot.data);
+                                return Text("${snapshot.error}");
+                              } else {
+                                return CircularProgressIndicator();
+                              }
+                            },
+                          )
+                      )
                     ]))));
   }
+  void _searchWord(String word) {
+    print("word");
+  }
+  
 }
 
 class SearchBar extends StatefulWidget {
@@ -90,6 +125,7 @@ class SearchBar extends StatefulWidget {
   _SearchBarState createState() => _SearchBarState();
 }
 
+// for the search bar & auto suggest
 class _SearchBarState extends State<SearchBar> {
   final _searchController = TextEditingController();
   var inputText = "";

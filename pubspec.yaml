@@ -31,6 +31,9 @@ dependencies:
   english_words: ^3.1.5
   http: ^0.12.2
   flutter_typeahead: ^1.9.2
+  sqflite: any
+  path_provider: any
+
 
 dev_dependencies:
   flutter_test:
