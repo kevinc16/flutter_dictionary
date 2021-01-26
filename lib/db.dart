@@ -95,6 +95,7 @@ class WordDBProvider {
     // retrive all last 50 entered words
     final db = await database;
     var wordFound = await db.query("LastWord", columns: ["word"], distinct: true, orderBy: "id DESC", limit: 50);
+    // print(wordFound);
     if (wordFound == null) {
       return null;
     }

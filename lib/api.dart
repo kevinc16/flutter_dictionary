@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
+import 'db.dart';
+
 /*
 - We get the definition by a HTTP request, and then we process that request to a listview which all the short defs are displayed, 
 categorized into noun, verb, and adjective
@@ -116,7 +118,7 @@ class WordDefinition {
 
 class Search extends StatefulWidget {
   final String word;
-  Search({Key key, this.word}) : super(key: key);
+  Search({Key key, this.word}) : super(key: key); // inherits the key from super class, key is used to identify widgets
 
   @override
   _SearchState createState() {
@@ -128,6 +130,10 @@ class _SearchState extends State<Search> {
   @override
   Widget build(BuildContext context) {
     Future<WordDefinition> _futureDef = getDef(widget.word);
+
+    // in here we also want to add the word to db
+    WordDBProvider.db.newLastWord(widget.word);
+
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.word[0].toUpperCase()}${widget.word.substring(1)}"),

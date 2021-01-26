@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Simple Dictionary',
       theme: ThemeData(primaryColor: Colors.blue[200]),
       home: MainPage(),
     );
@@ -30,8 +30,8 @@ class MyApp extends StatelessWidget {
 class MainPage extends StatelessWidget {
 
   Future<List<String>> _buildLastWords() async { // for the main page
-    await WordDBProvider.db.newLastWord("hello");
-    await WordDBProvider.db.newLastWord("what");
+    // await WordDBProvider.db.newLastWord("hello");
+    // await WordDBProvider.db.newLastWord("what");
     return await WordDBProvider.db.getLastWords();
   }
 
@@ -114,6 +114,8 @@ class MainPage extends StatelessWidget {
                       )
                     ]))));
   }
+
+  // this should go to the search page
   void _searchWord(String word) {
     print("word");
   }
@@ -170,7 +172,7 @@ class _SearchBarState extends State<SearchBar> {
           } else {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Search(word: value)),
+              MaterialPageRoute(builder: (context) => Search(word: value.trim().replaceAll(new RegExp("[^a-zA-Z]+"), ""))), // here is where the search happens
             );
           }
         },
