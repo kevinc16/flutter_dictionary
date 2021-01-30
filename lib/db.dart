@@ -67,6 +67,10 @@ class WordDBProvider {
           "word TEXT,"
           "freq INTEGER"
           ")");
+      await db.execute("CREATE TABLE SavedWord ("
+          "id INTEGER PRIMARY KEY,"
+          "word TEXT,"
+          ")");
     });
   }
 
@@ -81,7 +85,8 @@ class WordDBProvider {
     // e.g. wordFound = [{"id" : 1, "freq" : 2}, ...]
     var wordFound = await db.query("FreqWord", where: "word = ?", whereArgs: [word], columns: ["id", "freq"], distinct: true);
     var res;
-    if (wordFound != null) {
+    if (wordFound.length != 0) {
+      // print(wordFound);
       res = await db.update("FreqWord", {"freq" : wordFound[0]["freq"] + 1} ,where: "id = ?", whereArgs: [wordFound[0]["id"]]); // should only be 1 word, or null
     }
     else {
@@ -108,16 +113,60 @@ class WordDBProvider {
     }
   }
 
-  getFreqWords() async {
+  Future<List<Map<String, String>>> getFreqWords() async {
     // a list of the top 50 words searched
     final db = await database;
-    var wordFound = await db.query("FreqWord", columns: ["word"], distinct: true, orderBy: "freq DESC", limit: 50);
+    var wordFound = await db.query("FreqWord", columns: ["word", "freq"], distinct: true, orderBy: "freq DESC", limit: 50);
+    print(wordFound);
     if (wordFound == null) {
       return null;
     }
     else {
-      print(wordFound.toList());
-      return wordFound.toList();
+      List<Map<String, String>> ls = new List<Map<String, String>>();
+      wordFound.forEach((element) {
+        var tmp = new Map<String, String>();
+        tmp[element["word"]] = element["freq"].toString();
+        ls.add(tmp);
+      });
+      print(ls);
+      return ls;
+    }
+  }
+
+  newSavedWord(String word) async {
+    final db = await database;
+    // var res = await db.rawInsert("INSERT INTO SavedWord (word) VALUES (?)", [word]);
+    var res = await db.insert("SavedWord", {"word": word}, conflictAlgorithm: ConflictAlgorithm.ignore);
+    return res;
+  }
+
+  removeSavedWord(String word) async {
+    final db = await database;
+    // var res = await db.rawDelete("DELETE FROM SavedWord WHERE word = ?", [word]);
+    var res = await db.delete("SavedWord", where: 'word = ?', whereArgs: [word]);
+    return res;
+  }
+
+    Future<List<String>> getSavedWords(bool orderByAlpha) async {
+    // retrive all saved words
+    final db = await database;
+    var wordFound;
+    if (orderByAlpha) {
+      wordFound = await db.query("SavedWord", columns: ["word"], distinct: true, orderBy: "id DESC");
+    }
+    else {
+      wordFound = await db.query("SavedWord", columns: ["word"], distinct: true, orderBy: "word");
+    }
+
+    if (wordFound == null) {
+      return null;
+    }
+    else {
+      List<String> ls = new List<String>();
+      wordFound.forEach((element) {
+        ls.add(element["word"]);
+      });
+      return ls;
     }
   }
 }

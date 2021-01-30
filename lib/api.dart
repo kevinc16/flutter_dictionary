@@ -42,8 +42,24 @@ class WordDefinition {
   //   return WordDefinition(json: json);
   // }
 
-  static Widget buildDef(List<dynamic> json) {
+  static Widget buildDef(List<dynamic> json, String word) {
     Map<String,List<String>> defs = {"noun":[], "verb":[], "adjective":[]};
+    // check if there is no def:
+    if (json.isEmpty || json[0] is String) { // the json could contain a list of strings that are similar to the entered word
+      return Container(
+        alignment: Alignment.center,
+        child: Text(
+          "No Definition found :c (is the word spelled right?)",
+          style: TextStyle(fontSize: 16),
+        )
+      );
+    }
+
+    // in here we also want to add the word to db
+    // do it here so we know its a legit word
+    WordDBProvider.db.newLastWord(word);
+    WordDBProvider.db.newFreqWord(word);
+
     json.forEach((element) {
       if (element["fl"].toString().toLowerCase().contains("noun")) {
         element['shortdef'].forEach((s) {
@@ -132,7 +148,8 @@ class _SearchState extends State<Search> {
     Future<WordDefinition> _futureDef = getDef(widget.word);
 
     // in here we also want to add the word to db
-    WordDBProvider.db.newLastWord(widget.word);
+    // WordDBProvider.db.newLastWord(widget.word);
+    // WordDBProvider.db.newFreqWord(widget.word);
 
     return Scaffold(
       appBar: AppBar(
@@ -149,7 +166,7 @@ class _SearchState extends State<Search> {
                 builder: (context, snapshot) {
                   // print(snapshot);
                   if (snapshot.hasData) {
-                    return WordDefinition.buildDef(snapshot.data.json);
+                    return WordDefinition.buildDef(snapshot.data.json, widget.word);
                     // Text(snapshot.data.def);
                   } else if (snapshot.hasError) {
                     return Text("${snapshot.error}");

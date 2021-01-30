@@ -7,8 +7,11 @@ import 'db.dart';
 
 // to do:
 /*
-- most recent words thru sqlite
 - sidebar stuff
+- voice recognition
+- styling
+- done!
+- text to speech?
 */
 
 void main() {
@@ -47,7 +50,7 @@ class MainPage extends StatelessWidget {
               .requestFocus(new FocusNode()); // not the best way
         },
         child: Scaffold(
-            drawer: SideBar(),
+            drawer: SideBar(), // side bar widget
             appBar: AppBar(
               title: Text('Dictionary'),
               centerTitle: true,
@@ -63,12 +66,10 @@ class MainPage extends StatelessWidget {
                     border: Border(bottom: BorderSide(width: 0.5))),
                 padding: const EdgeInsets.all(10),
                 child: Column(
-                    // mainAxisAlignment: MainAxisAlignment.center,
-                    // crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 15.0),
-                        child: SearchBar(),
+                        child: SearchBar(), // search bar widget
                       ),
                       SizedBox(height: 20),
                       Expanded(
@@ -76,7 +77,7 @@ class MainPage extends StatelessWidget {
                             future: _buildLastWords(),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
-                                  print(snapshot.data);
+                                  // print(snapshot.data);
                                   return ListView.builder(
                                     itemCount: snapshot.data.length,
                                     itemBuilder: (context, index) {
@@ -88,14 +89,11 @@ class MainPage extends StatelessWidget {
                                               child: Row(
                                                 children: [Text(
                                                   snapshot.data[index],
-                                                  style: TextStyle(
-                                                    fontSize: 16
-                                                  ),
+                                                  style: TextStyle(fontSize: 16),
                                                   textAlign: TextAlign.right,
                                                 )]
                                               ),
-                                              onPressed: () => _searchWord(snapshot.data[index])
-                                              ,
+                                              onPressed: () => _searchWord(snapshot.data[index]),
                                             ),
                                           ),
                                           Divider(),
@@ -104,7 +102,7 @@ class MainPage extends StatelessWidget {
                                     },
                                   );
                               } else if (snapshot.hasError) {
-                                print(snapshot.data);
+                                // print(snapshot.data);
                                 return Text("${snapshot.error}");
                               } else {
                                 return CircularProgressIndicator();
@@ -116,7 +114,7 @@ class MainPage extends StatelessWidget {
   }
 
   // this should go to the search page
-  void _searchWord(String word) {
+  static void _searchWord(String word) {
     print("word");
   }
   
@@ -150,10 +148,6 @@ class _SearchBarState extends State<SearchBar> {
     return TypeAheadField(
       textFieldConfiguration: TextFieldConfiguration(
         decoration: InputDecoration(
-          // focusedBorder: InputBorder.none,
-          // enabledBorder: InputBorder.none,
-          // errorBorder: InputBorder.none,
-          // disabledBorder: InputBorder.none,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10))),
           hintText: 'Search',
@@ -279,26 +273,37 @@ class SideBar extends StatelessWidget {
         // padding: EdgeInsets.zero,
         children: <Widget>[
           DrawerHeader(
-            padding: EdgeInsets.zero,
-            // child: Text('What to do...'),
+            padding: EdgeInsets.all(8.0),
             decoration: BoxDecoration(
               color: Colors.blue,
             ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Image(image: AssetImage('images/doge.jpg'))]
+            )
           ),
           Expanded(
               child: ListView(children: <Widget>[
             ListTile(
-              title: Text('Most Frequent'),
-              leading: Icon(Icons.book),
+              title: Text('Most Frequent Words'),
+              leading: Icon(Icons.book_rounded),
               onTap: () {
-                Navigator.pop(context);
+                // Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => buildMostFreq(context)),
+                );
               },
             ),
             ListTile(
-              title: Text('Setting'),
-              leading: Icon(Icons.settings),
+              title: Text('Saved Words'),  
+              leading: Icon(Icons.bookmark), 
               onTap: () {
-                Navigator.pop(context);
+                // Navigator.pop(context); // add a sort by newest or alphabetical
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SavedWordsTab()),
+                );
               },
             ),
           ])),
@@ -316,6 +321,169 @@ class SideBar extends StatelessWidget {
               ])),
         ],
       ),
+    );
+  }
+
+  Future<List<Map<String, String>>> _buildFreqWords() async { // for the main page
+    return await WordDBProvider.db.getFreqWords();
+  }
+
+  Widget buildMostFreq(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Your Frequently Searched Words")
+      ),
+      body: Container(
+      // color: Colors.blue[100],
+      decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(width: 0.5))),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: <Widget>[
+          Expanded(
+              child: FutureBuilder<List<Map<String, String>>>(
+                future: _buildFreqWords(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                      print(snapshot.data);
+                      return ListView.builder(
+                        itemCount: snapshot.data.length,
+                        itemBuilder: (context, index) {
+                          return Column(
+                            children: <Widget>[
+                              ListTile(
+                                title: FlatButton(
+                                  height: 50,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        snapshot.data[index].keys.first,
+                                        style: TextStyle(fontSize: 16),
+                                        textAlign: TextAlign.right,
+                                      ),
+                                      Text(
+                                        snapshot.data[index].values.first,
+                                        style: TextStyle(fontSize: 16),
+                                        textAlign: TextAlign.right,
+                                      )
+                                    ]
+                                  ),
+                                  onPressed: () => MainPage._searchWord(snapshot.data[index].keys.first),
+                                ),
+                              ),
+                              Divider(),
+                            ],
+                          );
+                        },
+                      );
+                  } else if (snapshot.hasError) {
+                    // print(snapshot.data);
+                    return Text("${snapshot.error}");
+                  } else {
+                    return CircularProgressIndicator();
+                  }
+                },
+              )
+          )
+        ]))
+    );
+  }
+}
+
+
+// here we are using stateful builder to update the local state
+class SavedWordsTab extends StatelessWidget {
+  List<bool> isSelected = [true, false];
+
+  Future<List<String>> _buildSavedWords(bool orderByAlpha) async { // for the main page
+    return await WordDBProvider.db.getSavedWords(orderByAlpha);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StatefulBuilder(builder: (context, StateSetter setState) =>
+      Scaffold(
+        appBar: AppBar(
+          title: Text("Your Saved Words")
+        ),
+        body: Container(
+          // color: Colors.blue[100],
+          decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(width: 0.5))),
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: <Widget>[
+              Container(
+                child: ToggleButtons(
+                  children: <Widget>[ // buttons
+                    Text("Newest"),
+                    Text("Alphabetical"),
+                  ],
+                  onPressed: (int index) {
+                    setState(() {
+                      for (int buttonIndex = 0; buttonIndex < isSelected.length; buttonIndex++) {
+                        if (buttonIndex == index) {
+                          isSelected[buttonIndex] = true;
+                        } else {
+                          isSelected[buttonIndex] = false;
+                        }
+                      }
+                    });
+                  },
+                  isSelected: isSelected,
+                ),
+              ),
+              Expanded(
+                  child: FutureBuilder<List<String>>(
+                    future: _buildSavedWords(isSelected[1]), // true if we want to sort by alpha
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                          print(snapshot.data);
+                          return ListView.builder(
+                            itemCount: snapshot.data.length,
+                            itemBuilder: (context, index) {
+                              return Column(
+                                children: <Widget>[
+                                  ListTile(
+                                    title: FlatButton(
+                                      height: 50,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            snapshot.data[index],
+                                            style: TextStyle(fontSize: 16),
+                                            textAlign: TextAlign.right,
+                                          ),
+                                          Text(
+                                            snapshot.data[index],
+                                            style: TextStyle(fontSize: 16),
+                                            textAlign: TextAlign.right,
+                                          )
+                                        ]
+                                      ),
+                                      onPressed: () => MainPage._searchWord(snapshot.data[index]),
+                                    ),
+                                  ),
+                                  Divider(),
+                                ],
+                              );
+                            },
+                          );
+                      } else if (snapshot.hasError) {
+                        // print(snapshot.data);
+                        return Text("${snapshot.error}");
+                      } else {
+                        return CircularProgressIndicator();
+                      }
+                    },
+                  )
+              )
+            ]
+          )
+        )
+      )
     );
   }
 }
