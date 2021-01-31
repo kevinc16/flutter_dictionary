@@ -22,7 +22,7 @@ Future<WordDefinition> getDef(String word) async {
   print(response.statusCode);
 
   if (response.statusCode == 200) {
-    print(json.decode(response.body));
+    // print(json.decode(response.body));
     // return WordDefinition.fromJson(json.decode(response.body));
     return WordDefinition(json: json.decode(response.body));
   } else {
@@ -129,6 +129,7 @@ class WordDefinition {
         return Column(children: listDef);
       }
     );
+  
   }
 }
 
@@ -143,6 +144,22 @@ class Search extends StatefulWidget {
 }
 
 class _SearchState extends State<Search> {
+  bool _saved;
+
+  @override
+  void initState() {
+    // print("init");
+    _saved = false;
+    super.initState();
+    _checkSaved();
+  }
+
+  void _checkSaved() async {
+    _saved = await WordDBProvider.db.isWordSaved(widget.word);
+    // print(_saved);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     Future<WordDefinition> _futureDef = getDef(widget.word);
@@ -155,27 +172,52 @@ class _SearchState extends State<Search> {
       appBar: AppBar(
         title: Text("${widget.word[0].toUpperCase()}${widget.word.substring(1)}"),
       ),
-      body: Container(
-          // alignment: Alignment.center,
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
+      body: Column(
+        // alignment: Alignment.center,
+        // padding: const EdgeInsets.all(8.0),
+        children: [
+          Container(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              iconSize: 30.0,
+              // padding: EdgeInsets.only(left:4,right:4),
+              icon: _saved == true ? Icon(Icons.bookmark) : Icon(Icons.bookmark_border),
+              onPressed: () {
+                setState(() {
+                  _saved = !_saved;
+                });
+                if (_saved == true) {
+                  WordDBProvider.db.newSavedWord(widget.word);
+                }
+                else {
+                  WordDBProvider.db.removeSavedWord(widget.word);
+                }
+              }
+            )
+          ),
+          Expanded(
             // alignment: Alignment.center,
-            child: 
-              FutureBuilder<WordDefinition>(
-                future: _futureDef,
-                builder: (context, snapshot) {
-                  // print(snapshot);
-                  if (snapshot.hasData) {
-                    return WordDefinition.buildDef(snapshot.data.json, widget.word);
-                    // Text(snapshot.data.def);
-                  } else if (snapshot.hasError) {
-                    return Text("${snapshot.error}");
-                  } else {
-                    return CircularProgressIndicator();
-                  }
-                },
-              )
-          )),
+            // padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Container(
+              transform: Matrix4.translationValues(0.0, -20.0, 0.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: FutureBuilder<WordDefinition>(
+              future: _futureDef,
+              builder: (context, snapshot) {
+                // print(snapshot);
+                if (snapshot.hasData) {
+                  return WordDefinition.buildDef(snapshot.data.json, widget.word);
+                  // Text(snapshot.data.def);
+                } else if (snapshot.hasError) {
+                  return Text("${snapshot.error}");
+                } else {
+                  return CircularProgressIndicator();
+                }
+              },
+            ))
+          )
+        ]
+      ),
     );
   }
 }

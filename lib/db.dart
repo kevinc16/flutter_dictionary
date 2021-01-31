@@ -44,6 +44,11 @@ class WordDBProvider {
   static Database _database;
 
   Future<Database> get database async {
+    // resetting the db
+    // Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    // String path = join(documentsDirectory.path, "last_word.db");
+    // await deleteDatabase(path);
+
     if (_database != null) {
       return _database;
     }
@@ -69,7 +74,7 @@ class WordDBProvider {
           ")");
       await db.execute("CREATE TABLE SavedWord ("
           "id INTEGER PRIMARY KEY,"
-          "word TEXT,"
+          "word TEXT"
           ")");
     });
   }
@@ -117,8 +122,8 @@ class WordDBProvider {
     // a list of the top 50 words searched
     final db = await database;
     var wordFound = await db.query("FreqWord", columns: ["word", "freq"], distinct: true, orderBy: "freq DESC", limit: 50);
-    print(wordFound);
-    if (wordFound == null) {
+    // print(wordFound);
+    if (wordFound.length == 0) {
       return null;
     }
     else {
@@ -151,14 +156,16 @@ class WordDBProvider {
     // retrive all saved words
     final db = await database;
     var wordFound;
-    if (orderByAlpha) {
+    // print(orderByAlpha);
+    if (!orderByAlpha) {
       wordFound = await db.query("SavedWord", columns: ["word"], distinct: true, orderBy: "id DESC");
     }
     else {
       wordFound = await db.query("SavedWord", columns: ["word"], distinct: true, orderBy: "word");
     }
+    // print(wordFound);
 
-    if (wordFound == null) {
+    if (wordFound.length == 0) {
       return null;
     }
     else {
@@ -168,5 +175,14 @@ class WordDBProvider {
       });
       return ls;
     }
+  }
+
+  Future<bool> isWordSaved(String word) async {
+    final db = await database;
+    var wordFound = await db.query("SavedWord", columns: ["word"], distinct: true, where: "word = ?", whereArgs: [word]);
+    if (wordFound.length == 0)
+      return false;
+    else
+      return true;
   }
 }

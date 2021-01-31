@@ -7,7 +7,6 @@ import 'db.dart';
 
 // to do:
 /*
-- sidebar stuff
 - voice recognition
 - styling
 - done!
@@ -93,7 +92,7 @@ class MainPage extends StatelessWidget {
                                                   textAlign: TextAlign.right,
                                                 )]
                                               ),
-                                              onPressed: () => _searchWord(snapshot.data[index]),
+                                              onPressed: () => _searchWord(context, snapshot.data[index]),
                                             ),
                                           ),
                                           Divider(),
@@ -114,8 +113,12 @@ class MainPage extends StatelessWidget {
   }
 
   // this should go to the search page
-  static void _searchWord(String word) {
-    print("word");
+  static void _searchWord(BuildContext context, String word) {
+    // print("word");
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => Search(word: word)), // here is where the search happens
+    );
   }
   
 }
@@ -128,10 +131,17 @@ class SearchBar extends StatefulWidget {
 // for the search bar & auto suggest
 class _SearchBarState extends State<SearchBar> {
   final _searchController = TextEditingController();
-  var inputText = "";
+  String inputText;
 
   @override
   void initState() {
+    inputText = "";
+    _searchController.addListener(() { // this way we will be able to make the clear button appear
+      setState(() {
+        inputText = _searchController.text;
+      });
+    });
+
     super.initState();
   }
 
@@ -159,14 +169,23 @@ class _SearchBarState extends State<SearchBar> {
           contentPadding: const EdgeInsets.symmetric(horizontal: 40.0),
         ),
         controller: _searchController,
+        // onChanged: (value) {
+        //   print("?");
+        //   print(_searchController.text);
+        //   print(inputText);
+        // },
         onSubmitted: (value) {
           // check for text***
-          if (value.isEmpty || value.length > 20) {
+          if (value.isEmpty || value.length > 20 || _checkCharOfWord(value)) {
             _showTextInvalid();
           } else {
+            // _searchController.text = "";
+            setState(() {
+              _searchController.clear();
+            });
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Search(word: value.trim().replaceAll(new RegExp("[^a-zA-Z]+"), ""))), // here is where the search happens
+              MaterialPageRoute(builder: (context) => Search(word: value.toLowerCase())), // here is where the search happens
             );
           }
         },
@@ -190,9 +209,12 @@ class _SearchBarState extends State<SearchBar> {
         setState(() {
           _searchController.text = suggestion;
         });
-        if (suggestion.isEmpty || suggestion.length > 20) {
+        if (suggestion.isEmpty || suggestion.length > 20 || _checkCharOfWord(suggestion)) {
           _showTextInvalid();
         } else {
+          setState(() {
+            _searchController.clear();
+          });
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => Search(word: suggestion)),
@@ -203,6 +225,10 @@ class _SearchBarState extends State<SearchBar> {
         return _suggestString(pattern);
       },
     );
+  }
+
+  bool _checkCharOfWord(String word) {
+    return (word.replaceAll(new RegExp("[a-zA-Z]+"), "") != ""); // if there are illegal characters, the string is not empty
   }
 
   List<String> _suggestString(String pattern) {
@@ -219,7 +245,8 @@ class _SearchBarState extends State<SearchBar> {
   }
 
   Widget hidingIcon() {
-    if (_searchController.text.length > 0) {
+    if (inputText.isNotEmpty) {
+      // print("ASD");
       return IconButton(
           icon: Icon(
             Icons.clear,
@@ -228,6 +255,7 @@ class _SearchBarState extends State<SearchBar> {
           onPressed: () {
             setState(() {
               _searchController.clear();
+              // _searchController.text = "";
               inputText = "";
             });
           });
@@ -369,7 +397,7 @@ class SideBar extends StatelessWidget {
                                       )
                                     ]
                                   ),
-                                  onPressed: () => MainPage._searchWord(snapshot.data[index].keys.first),
+                                  onPressed: () => MainPage._searchWord(context, snapshot.data[index].keys.first),
                                 ),
                               ),
                               Divider(),
@@ -415,24 +443,32 @@ class SavedWordsTab extends StatelessWidget {
           child: Column(
             children: <Widget>[
               Container(
-                child: ToggleButtons(
-                  children: <Widget>[ // buttons
-                    Text("Newest"),
-                    Text("Alphabetical"),
-                  ],
-                  onPressed: (int index) {
-                    setState(() {
-                      for (int buttonIndex = 0; buttonIndex < isSelected.length; buttonIndex++) {
-                        if (buttonIndex == index) {
-                          isSelected[buttonIndex] = true;
-                        } else {
-                          isSelected[buttonIndex] = false;
-                        }
-                      }
-                    });
-                  },
-                  isSelected: isSelected,
+                decoration: BoxDecoration(
+                  // color: Colors.black
                 ),
+                child: LayoutBuilder(builder: (context, constraints) {
+                  return ToggleButtons(
+                    constraints: BoxConstraints.expand(width: constraints.maxWidth / 2 - 1.5, height: 25), //number 2 is number of toggle buttons, -1.5 for border
+                    borderRadius: BorderRadius.circular(5),
+                    textStyle: TextStyle(fontSize: 16),
+                    children: <Widget>[ // buttons
+                      Text("Newest"),
+                      Text("Alphabetical"),
+                    ],
+                    onPressed: (int index) {
+                      setState(() {
+                        for (int buttonIndex = 0; buttonIndex < isSelected.length; buttonIndex++) {
+                          if (buttonIndex == index) {
+                            isSelected[buttonIndex] = true;
+                          } else {
+                            isSelected[buttonIndex] = false;
+                          }
+                        }
+                      });
+                    },
+                    isSelected: isSelected,
+                  );
+                })
               ),
               Expanded(
                   child: FutureBuilder<List<String>>(
@@ -456,14 +492,9 @@ class SavedWordsTab extends StatelessWidget {
                                             style: TextStyle(fontSize: 16),
                                             textAlign: TextAlign.right,
                                           ),
-                                          Text(
-                                            snapshot.data[index],
-                                            style: TextStyle(fontSize: 16),
-                                            textAlign: TextAlign.right,
-                                          )
                                         ]
                                       ),
-                                      onPressed: () => MainPage._searchWord(snapshot.data[index]),
+                                      onPressed: () => MainPage._searchWord(context, snapshot.data[index]),
                                     ),
                                   ),
                                   Divider(),
@@ -486,4 +517,5 @@ class SavedWordsTab extends StatelessWidget {
       )
     );
   }
+
 }
