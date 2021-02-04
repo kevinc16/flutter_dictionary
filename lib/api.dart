@@ -2,8 +2,12 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
 
 import 'db.dart';
+import 'tts.dart';
+
+import 'main.dart';
 
 /*
 - We get the definition by a HTTP request, and then we process that request to a listview which all the short defs are displayed, 
@@ -133,6 +137,25 @@ class WordDefinition {
   }
 }
 
+class UpdateLastWords extends InheritedWidget {
+  List<String> lastWordList = new List<String>();
+
+  UpdateLastWords({
+    Key key,
+    @required Widget child,
+  }): super(key: key, child: child);
+
+  static UpdateLastWords of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<UpdateLastWords>();
+  }
+
+  @override
+  bool updateShouldNotify(UpdateLastWords old) { 
+    print("updating!");
+    return !ListEquality().equals(lastWordList, old.lastWordList);
+  }
+}
+
 class Search extends StatefulWidget {
   final String word;
   Search({Key key, this.word}) : super(key: key); // inherits the key from super class, key is used to identify widgets
@@ -152,6 +175,7 @@ class _SearchState extends State<Search> {
     _saved = false;
     super.initState();
     _checkSaved();
+    // UpdateLastWords.of(context).id++;
   }
 
   void _checkSaved() async {
@@ -171,30 +195,43 @@ class _SearchState extends State<Search> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.word[0].toUpperCase()}${widget.word.substring(1)}"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () async {
+            // Navigator.of(context).pop();
+            print(UpdateLastWords.of(context).lastWordList);
+            UpdateLastWords.of(context).lastWordList = await WordDBProvider.db.getLastWords(); // hmm...
+            print(UpdateLastWords.of(context).lastWordList.length);
+            Navigator.of(context).pop();
+          },
+        ), 
       ),
       body: Column(
         // alignment: Alignment.center,
         // padding: const EdgeInsets.all(8.0),
         children: [
-          Container(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              iconSize: 30.0,
-              // padding: EdgeInsets.only(left:4,right:4),
-              icon: _saved == true ? Icon(Icons.bookmark) : Icon(Icons.bookmark_border),
-              onPressed: () {
-                setState(() {
-                  _saved = !_saved;
-                });
-                if (_saved == true) {
-                  WordDBProvider.db.newSavedWord(widget.word);
+          Row(
+            // alignment: Alignment.centerRight,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TTS(widget.word),
+              IconButton(
+                iconSize: 30.0,
+                // padding: EdgeInsets.only(left:4,right:4),
+                icon: _saved == true ? Icon(Icons.bookmark) : Icon(Icons.bookmark_border),
+                onPressed: () {
+                  setState(() {
+                    _saved = !_saved;
+                  });
+                  if (_saved == true) {
+                    WordDBProvider.db.newSavedWord(widget.word);
+                  }
+                  else {
+                    WordDBProvider.db.removeSavedWord(widget.word);
+                  }
                 }
-                else {
-                  WordDBProvider.db.removeSavedWord(widget.word);
-                }
-              }
-            )
-          ),
+              )
+          ]),
           Expanded(
             // alignment: Alignment.center,
             // padding: const EdgeInsets.symmetric(horizontal: 8),

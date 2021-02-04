@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 import 'api.dart';
@@ -21,99 +23,129 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return UpdateLastWords(child: MaterialApp(
       title: 'Simple Dictionary',
       theme: ThemeData(primaryColor: Colors.blue[200]),
       home: MainPage(),
-    );
+    ));
   }
 }
 
+// class UpdateLastWords extends InheritedWidget {
+//   int id = 0;
+
+//   UpdateLastWords({
+//     Key key,
+//     @required Widget child,
+//   }): super(key: key, child: child);
+
+//   static UpdateLastWords of(BuildContext context) {
+//     return context.dependOnInheritedWidgetOfExactType<UpdateLastWords>();
+//   }
+
+//   @override
+//   bool updateShouldNotify(UpdateLastWords old) => id != old.id;
+// }
+
+// make this stateful and add id, and when we change id we redraw the list - or use inherited widget
 class MainPage extends StatelessWidget {
+  
+  // StreamController<List<String>> _refreshController;
 
   Future<List<String>> _buildLastWords() async { // for the main page
-    // await WordDBProvider.db.newLastWord("hello");
-    // await WordDBProvider.db.newLastWord("what");
+    print("getting last words");
     return await WordDBProvider.db.getLastWords();
   }
 
+  // static Stream<List<String>> _refreshList = (() async* { // we can use this function to call the refresh of the list
+  //   await Future<void>.delayed(Duration(seconds: 1));
+  //   // yield 1;
+  //   yield ["1"];
+  //   await Future<void>.delayed(Duration(seconds: 1));
+
+  //   // var x = _buildLastWords();
+  // })();
+
   @override
   Widget build(BuildContext context) {
+    var lastWords = UpdateLastWords.of(context).lastWordList;
     return GestureDetector(
-        onTap: () {
-          // FocusScopeNode currentFocus = FocusScope.of(context);
-          // if (!currentFocus.hasPrimaryFocus) {
-          //   currentFocus.unfocus();
-          // }
-          FocusScope.of(context)
-              .requestFocus(new FocusNode()); // not the best way
-        },
-        child: Scaffold(
-            drawer: SideBar(), // side bar widget
-            appBar: AppBar(
-              title: Text('Dictionary'),
-              centerTitle: true,
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.mic),
-                ),
-              ],
+      onTap: () {
+        // FocusScopeNode currentFocus = FocusScope.of(context);
+        // if (!currentFocus.hasPrimaryFocus) {
+        //   currentFocus.unfocus();
+        // }
+        FocusScope.of(context)
+            .requestFocus(new FocusNode()); // not the best way
+      },
+      child: Scaffold(
+        drawer: SideBar(), // side bar widget
+        appBar: AppBar(
+          title: Text('Simple Dictionary'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.mic),
             ),
-            body: new Container(
-                // color: Colors.blue[100],
-                decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(width: 0.5))),
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                    children: <Widget>[
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 15.0),
-                        child: SearchBar(), // search bar widget
-                      ),
-                      SizedBox(height: 20),
-                      Expanded(
-                          child: FutureBuilder<List<String>>(
-                            future: _buildLastWords(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                  // print(snapshot.data);
-                                  return ListView.builder(
-                                    itemCount: snapshot.data.length,
-                                    itemBuilder: (context, index) {
-                                      return Column(
-                                        children: <Widget>[
-                                          ListTile(
-                                            title: FlatButton(
-                                              height: 50,
-                                              child: Row(
-                                                children: [Text(
-                                                  snapshot.data[index],
-                                                  style: TextStyle(fontSize: 16),
-                                                  textAlign: TextAlign.right,
-                                                )]
-                                              ),
-                                              onPressed: () => _searchWord(context, snapshot.data[index]),
-                                            ),
-                                          ),
-                                          Divider(),
-                                        ],
-                                      );
-                                    },
-                                  );
-                              } else if (snapshot.hasError) {
-                                // print(snapshot.data);
-                                return Text("${snapshot.error}");
-                              } else {
-                                return CircularProgressIndicator();
-                              }
-                            },
-                          )
+          ],
+        ),
+        body: new Container(
+            // color: Colors.blue[100],
+            decoration: BoxDecoration( border: Border(bottom: BorderSide(width: 0.5)) ),
+            padding: const EdgeInsets.all(10),
+            child: Column(
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 15.0),
+                    child: SearchBar(), // search bar widget
+                  ),
+                  SizedBox(height: 20),
+                  Expanded(
+                      child: lastWords.length != 0 ? lastWordsBuild(lastWords) : FutureBuilder<List<String>>(
+                        future: _buildLastWords(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return lastWordsBuild(snapshot.data);
+                          } else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          } else {
+                            return CircularProgressIndicator();
+                          }
+                        },
                       )
-                    ]))));
+                  )
+                ])))
+    );
+  }
+
+  ListView lastWordsBuild(List<String> data) {
+    return ListView.builder(
+      itemCount: data.length,
+      itemBuilder: (context, index) {
+        return Column(
+          children: <Widget>[
+            ListTile(
+              title: FlatButton(
+                height: 50,
+                child: Row(
+                  children: [Text(
+                    data[index],
+                    style: TextStyle(fontSize: 16),
+                    textAlign: TextAlign.right,
+                  )]
+                ),
+                onPressed: () => _searchWord(context, data[index]),
+              ),
+            ),
+            Divider(),
+          ],
+        );
+      },
+    );
   }
 
   // this should go to the search page
-  static void _searchWord(BuildContext context, String word) {
+  static void _searchWord(BuildContext context, String word) async {
     // print("word");
     Navigator.push(
       context,
@@ -121,6 +153,14 @@ class MainPage extends StatelessWidget {
     );
   }
   
+}
+
+void _searchWord(BuildContext context, String word) async {
+  // print("word");
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => Search(word: word)), // here is where the search happens
+  );
 }
 
 class SearchBar extends StatefulWidget {
@@ -169,11 +209,6 @@ class _SearchBarState extends State<SearchBar> {
           contentPadding: const EdgeInsets.symmetric(horizontal: 40.0),
         ),
         controller: _searchController,
-        // onChanged: (value) {
-        //   print("?");
-        //   print(_searchController.text);
-        //   print(inputText);
-        // },
         onSubmitted: (value) {
           // check for text***
           if (value.isEmpty || value.length > 20 || _checkCharOfWord(value)) {
@@ -183,10 +218,7 @@ class _SearchBarState extends State<SearchBar> {
             setState(() {
               _searchController.clear();
             });
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => Search(word: value.toLowerCase())), // here is where the search happens
-            );
+            MainPage._searchWord(context, value.toLowerCase());
           }
         },
       ),
@@ -215,10 +247,11 @@ class _SearchBarState extends State<SearchBar> {
           setState(() {
             _searchController.clear();
           });
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => Search(word: suggestion)),
-          );
+          MainPage._searchWord(context, suggestion);
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => Search(word: suggestion)),
+          // );
         }
       },
       suggestionsCallback: (pattern) {
@@ -517,5 +550,4 @@ class SavedWordsTab extends StatelessWidget {
       )
     );
   }
-
 }
