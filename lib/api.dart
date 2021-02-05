@@ -89,7 +89,7 @@ class WordDefinition {
     return ListView.builder(
       shrinkWrap: true,
       scrollDirection: Axis.vertical,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
       itemCount: defs.length,
       itemBuilder: (BuildContext context, int index) {
         List<Container> listDef = new List<Container>();
@@ -98,7 +98,7 @@ class WordDefinition {
           listDef.add( // for title (e.g. noun, verb)
             Container(
               width: double.infinity,
-              padding: EdgeInsets.only(top: 10, bottom: 5),
+              padding: EdgeInsets.only(top: 5, bottom: 5),
               child: Text(
                 defs.keys.elementAt(index), 
                 style: TextStyle(
@@ -199,9 +199,10 @@ class _SearchState extends State<Search> {
           icon: Icon(Icons.arrow_back),
           onPressed: () async {
             // Navigator.of(context).pop();
-            print(UpdateLastWords.of(context).lastWordList);
+            // print(UpdateLastWords.of(context).lastWordList);
             UpdateLastWords.of(context).lastWordList = await WordDBProvider.db.getLastWords(); // hmm...
-            print(UpdateLastWords.of(context).lastWordList.length);
+            // print(UpdateLastWords.of(context).lastWordList.length);
+            // print(UpdateLastWords.of(context).lastWordList);
             Navigator.of(context).pop();
           },
         ), 
@@ -236,8 +237,8 @@ class _SearchState extends State<Search> {
             // alignment: Alignment.center,
             // padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Container(
-              transform: Matrix4.translationValues(0.0, -20.0, 0.0),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              // transform: Matrix4.translationValues(0.0, -20.0, 0.0),
+              padding: const EdgeInsets.only(left: 10, right : 10, bottom: 15),
               child: FutureBuilder<WordDefinition>(
               future: _futureDef,
               builder: (context, snapshot) {

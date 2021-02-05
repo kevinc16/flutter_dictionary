@@ -9,10 +9,9 @@ import 'db.dart';
 
 // to do:
 /*
-- voice recognition
+- voice recognition (tbd)
 - styling
 - done!
-- text to speech?
 */
 
 void main() {
@@ -31,44 +30,17 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// class UpdateLastWords extends InheritedWidget {
-//   int id = 0;
-
-//   UpdateLastWords({
-//     Key key,
-//     @required Widget child,
-//   }): super(key: key, child: child);
-
-//   static UpdateLastWords of(BuildContext context) {
-//     return context.dependOnInheritedWidgetOfExactType<UpdateLastWords>();
-//   }
-
-//   @override
-//   bool updateShouldNotify(UpdateLastWords old) => id != old.id;
-// }
-
 // make this stateful and add id, and when we change id we redraw the list - or use inherited widget
 class MainPage extends StatelessWidget {
   
-  // StreamController<List<String>> _refreshController;
-
   Future<List<String>> _buildLastWords() async { // for the main page
     print("getting last words");
     return await WordDBProvider.db.getLastWords();
   }
 
-  // static Stream<List<String>> _refreshList = (() async* { // we can use this function to call the refresh of the list
-  //   await Future<void>.delayed(Duration(seconds: 1));
-  //   // yield 1;
-  //   yield ["1"];
-  //   await Future<void>.delayed(Duration(seconds: 1));
-
-  //   // var x = _buildLastWords();
-  // })();
-
   @override
   Widget build(BuildContext context) {
-    var lastWords = UpdateLastWords.of(context).lastWordList;
+    // var lastWords = UpdateLastWords.of(context).lastWordList;
     return GestureDetector(
       onTap: () {
         // FocusScopeNode currentFocus = FocusScope.of(context);
@@ -101,7 +73,7 @@ class MainPage extends StatelessWidget {
                   ),
                   SizedBox(height: 20),
                   Expanded(
-                      child: lastWords.length != 0 ? lastWordsBuild(lastWords) : FutureBuilder<List<String>>(
+                      child: UpdateLastWords.of(context).lastWordList.length != 0 ? lastWordsBuild(UpdateLastWords.of(context).lastWordList) : FutureBuilder<List<String>>(
                         future: _buildLastWords(),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
