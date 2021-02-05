@@ -42,3 +42,5 @@ app.*.map.json
 
 # vscode
 .vscode
+
+*_test*
