@@ -7,7 +7,7 @@ import 'package:collection/collection.dart';
 import 'db.dart';
 import 'tts.dart';
 
-import 'main.dart';
+import 'key.dart' as key;
 
 /*
 - We get the definition by a HTTP request, and then we process that request to a listview which all the short defs are displayed, 
@@ -17,7 +17,7 @@ categorized into noun, verb, and adjective
 
 Future<WordDefinition> getDef(String word) async {
   final http.Response response = await http.get(
-    'https://dictionaryapi.com/api/v3/references/collegiate/json/$word?key=69d47b46-068c-48a7-adb9-6b0bcb49f649',
+    'https://dictionaryapi.com/api/v3/references/collegiate/json/$word?key=${key.dictApiKey}',
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
@@ -58,11 +58,6 @@ class WordDefinition {
         )
       );
     }
-
-    // in here we also want to add the word to db
-    // do it here so we know its a legit word
-    WordDBProvider.db.newLastWord(word);
-    WordDBProvider.db.newFreqWord(word);
 
     json.forEach((element) {
       if (element["fl"].toString().toLowerCase().contains("noun")) {
@@ -152,7 +147,8 @@ class UpdateLastWords extends InheritedWidget {
   @override
   bool updateShouldNotify(UpdateLastWords old) { 
     print("updating!");
-    return !ListEquality().equals(lastWordList, old.lastWordList);
+    return !ListEquality().equals(lastWordList, old.lastWordList); // updates the related widgets when this is true
+                                                                   // note: will cause the consumer to rebuild when the inherited widget itself changes state.
   }
 }
 
@@ -171,6 +167,10 @@ class _SearchState extends State<Search> {
 
   @override
   void initState() {
+    // in here we also want to add the word to db
+    // do it here so we know its a legit word
+    WordDBProvider.db.newLastWord(widget.word);
+    WordDBProvider.db.newFreqWord(widget.word);
     // print("init");
     _saved = false;
     super.initState();
@@ -188,21 +188,15 @@ class _SearchState extends State<Search> {
   Widget build(BuildContext context) {
     Future<WordDefinition> _futureDef = getDef(widget.word);
 
-    // in here we also want to add the word to db
-    // WordDBProvider.db.newLastWord(widget.word);
-    // WordDBProvider.db.newFreqWord(widget.word);
-
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.word[0].toUpperCase()}${widget.word.substring(1)}"),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () async {
-            // Navigator.of(context).pop();
-            // print(UpdateLastWords.of(context).lastWordList);
+            print(UpdateLastWords.of(context).lastWordList);
             UpdateLastWords.of(context).lastWordList = await WordDBProvider.db.getLastWords(); // hmm...
-            // print(UpdateLastWords.of(context).lastWordList.length);
-            // print(UpdateLastWords.of(context).lastWordList);
+            print(UpdateLastWords.of(context).lastWordList);
             Navigator.of(context).pop();
           },
         ), 

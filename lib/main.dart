@@ -73,11 +73,19 @@ class MainPage extends StatelessWidget {
                   ),
                   SizedBox(height: 20),
                   Expanded(
-                      child: UpdateLastWords.of(context).lastWordList.length != 0 ? lastWordsBuild(UpdateLastWords.of(context).lastWordList) : FutureBuilder<List<String>>(
+                      child: UpdateLastWords.of(context).lastWordList.length != 0 
+                      ? lastWordsBuild(UpdateLastWords.of(context).lastWordList) 
+                      : FutureBuilder<List<String>>(
                         future: _buildLastWords(),
                         builder: (context, snapshot) {
+                          print(UpdateLastWords.of(context).lastWordList.length);
                           if (snapshot.hasData) {
-                            return lastWordsBuild(snapshot.data);
+                            if (snapshot.data.length == 0) {
+                              return Container(child: Text(":D"), alignment: Alignment.center);
+                            }
+                            else {
+                              return lastWordsBuild(snapshot.data);
+                            }
                           } else if (snapshot.hasError) {
                             return Text("${snapshot.error}");
                           } else {
@@ -125,14 +133,6 @@ class MainPage extends StatelessWidget {
     );
   }
   
-}
-
-void _searchWord(BuildContext context, String word) async {
-  // print("word");
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => Search(word: word)), // here is where the search happens
-  );
 }
 
 class SearchBar extends StatefulWidget {
@@ -184,7 +184,7 @@ class _SearchBarState extends State<SearchBar> {
         onSubmitted: (value) {
           // check for text***
           if (value.isEmpty || value.length > 20 || _checkCharOfWord(value)) {
-            _showTextInvalid();
+            _showTextInvalid(context);
           } else {
             // _searchController.text = "";
             setState(() {
@@ -214,7 +214,7 @@ class _SearchBarState extends State<SearchBar> {
           _searchController.text = suggestion;
         });
         if (suggestion.isEmpty || suggestion.length > 20 || _checkCharOfWord(suggestion)) {
-          _showTextInvalid();
+          _showTextInvalid(context);
         } else {
           setState(() {
             _searchController.clear();
@@ -269,7 +269,7 @@ class _SearchBarState extends State<SearchBar> {
     }
   }
 
-  Future<void> _showTextInvalid() async {
+  Future<void> _showTextInvalid(BuildContext context) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
