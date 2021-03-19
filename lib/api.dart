@@ -87,7 +87,7 @@ class WordDefinition {
       padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
       itemCount: defs.length,
       itemBuilder: (BuildContext context, int index) {
-        List<Container> listDef = new List<Container>();
+        List<Container> listDef = [];
         // print(defs[index]);
         if (defs.values.elementAt(index) != null && defs.values.elementAt(index).isNotEmpty) {
           listDef.add( // for title (e.g. noun, verb)
@@ -133,7 +133,7 @@ class WordDefinition {
 }
 
 class UpdateLastWords extends InheritedWidget {
-  List<String> lastWordList = new List<String>();
+  List<String> lastWordList = [];
 
   UpdateLastWords({
     Key key,

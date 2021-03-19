@@ -86,10 +86,10 @@ class _TTSstate extends State<TTS> {
     }
   }
 
-  Future _stop() async {
-    var result = await flutterTts.stop();
-    if (result == 1) setState(() => ttsState = TtsState.stopped);
-  }
+  // Future _stop() async {
+  //   var result = await flutterTts.stop();
+  //   if (result == 1) setState(() => ttsState = TtsState.stopped);
+  // }
 
   @override
   void dispose() {

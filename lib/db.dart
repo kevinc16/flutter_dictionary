@@ -88,7 +88,9 @@ class WordDBProvider {
   newFreqWord(String word) async { // update if already exists, otherwise insert new word
     final db = await database;
     // e.g. wordFound = [{"id" : 1, "freq" : 2}, ...]
-    var wordFound = await db.query("FreqWord", where: "word = ?", whereArgs: [word], columns: ["id", "freq"], distinct: true);
+    List<Map> wordFound = await db.query("FreqWord", where: "word = ?", whereArgs: [word], columns: ["id", "freq"], distinct: true);
+    // print("wordFound");
+    // print(wordFound);
     var res;
     if (wordFound.length != 0) {
       // print(wordFound);
@@ -110,7 +112,7 @@ class WordDBProvider {
       return null;
     }
     else {
-      List<String> ls = new List<String>();
+      List<String> ls = [];
       wordFound.forEach((element) {
         ls.add(element["word"]);
       });
@@ -127,7 +129,7 @@ class WordDBProvider {
       return null;
     }
     else {
-      List<Map<String, String>> ls = new List<Map<String, String>>();
+      List<Map<String, String>> ls = [];
       wordFound.forEach((element) {
         var tmp = new Map<String, String>();
         tmp[element["word"]] = element["freq"].toString();
@@ -169,7 +171,7 @@ class WordDBProvider {
       return null;
     }
     else {
-      List<String> ls = new List<String>();
+      List<String> ls = [];
       wordFound.forEach((element) {
         ls.add(element["word"]);
       });

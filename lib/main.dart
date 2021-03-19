@@ -105,8 +105,8 @@ class MainPage extends StatelessWidget {
         return Column(
           children: <Widget>[
             ListTile(
-              title: FlatButton(
-                height: 50,
+              title: TextButton(
+                style: TextButton.styleFrom(minimumSize: Size(0, 50)),
                 child: Row(
                   children: [Text(
                     data[index],
@@ -240,7 +240,7 @@ class _SearchBarState extends State<SearchBar> {
     if (pattern.isEmpty) {
       return null;
     }
-    List<String> temp = new List<String>();
+    List<String> temp = [];
     nouns.forEach((element) {
       if (element.startsWith(pattern)) {
         temp.add(element);
@@ -385,8 +385,8 @@ class SideBar extends StatelessWidget {
                           return Column(
                             children: <Widget>[
                               ListTile(
-                                title: FlatButton(
-                                  height: 50,
+                                title: TextButton(
+                                  style: TextButton.styleFrom(minimumSize: Size(0, 50)),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
@@ -487,8 +487,8 @@ class SavedWordsTab extends StatelessWidget {
                               return Column(
                                 children: <Widget>[
                                   ListTile(
-                                    title: FlatButton(
-                                      height: 50,
+                                    title: TextButton(
+                                      style: TextButton.styleFrom(minimumSize: Size(0, 50)),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
